@@ -1,0 +1,152 @@
+<html ng-app="app">
+
+<head>
+	<script type="text/javascript" src="dist/angular.js"></script>
+	<script type="text/javascript" src="dist/lodash.js"></script>
+	<script type="text/javascript" src="l:\try4\hawtio-web-1.2-redhat-379\lib\sugar-1.3.6-custom.min.js "></script>
+	<script type="text/javascript" src="dist/restangular.js"></script>
+	<link rel="stylesheet" type="text/css" href="dist/ng-grid.css">
+	<script src="dist/jquery-1.8.2.min.js"></script>
+	<script src="dist/ng-grid.min.js"></script>
+	<script src="dist/toastr.js"></script>
+	<script src="dist/transpose.js"></script>
+	<style>
+		.gridStyle {
+			/*border: 1px solid rgb(212,212,212);*/
+			width: 100%;
+			height: 50%
+		}
+	</style>
+</head>
+
+
+
+
+
+<body>
+
+	<script type="text/javascript">
+		var _module = angular.module('app', ["restangular","ngGrid"]);			
+			_module.config(mainConfig);
+			//_module.run(mainRun);
+			_module.controller('MainCtrl',MainCtrl);
+			
+			function getBasicAuthHeader(username, password) {
+				var authInfo = username + ":" + password;
+				authInfo = authInfo.encodeBase64();
+				return "Basic " + authInfo;
+			};			
+			function mainConfig(RestangularProvider){ //RestangularProvider
+				
+				RestangularProvider.setDefaultHeaders({
+					//'Authorization': 'Basic YWRtaW46YWRtaW4=', 
+					//getBasicAuthHeader('admin','admin'),
+					//'Access-Control-Allow-Origin' : '*',
+					//'Origin':$location.host,
+					});
+				RestangularProvider.setBaseUrl('http://stws2305:8184/cxf/conn/connectionsservice/');
+				//RestangularProvider.setBaseUrl('http://stws2305:8181/hawtio/proxy/stws2305/8184/cxf/conn/connectionsservice/');
+				//RestangularProvider.setBaseUrl('http://localhost:818/cxf/conn/connectionsservice/');
+			};
+
+
+			//Restangular
+			function MainCtrl($scope,Restangular,$timeout) {	
+				$scope.MasterData = [];
+				$scope.datafn= null;
+				$scope.DetailData = null;
+				$scope.connections = [];
+				$scope.connection = [];		
+				
+				//$scope.Selection = [];
+				
+				$scope.chasi = function (){	
+					$scope.connection.connection_password = '123123';
+					$scope.connection.put();
+					$scope.$apply;
+					// var row = $scope.DetailData;	
+					// if (row && row.entity) {
+					// 	if (row.selected) {
+					// 		var conn=connections[row.rowIndex];
+					// 		row.connection_password = '123123';
+					// 		conn.connection_password = '123123';
+					// 		conn.put()
+					// 	}
+					// }			
+					// $scope.Selection.connection_password = '123123';
+					// $scope.Selection.put();
+					//Restangular.all('connection').post($scope.Selections[0]);
+				};
+				
+								
+				$scope.gridOptions = { 
+					data: 'MasterData',
+					selectedItems: $scope.mySelections,
+					multiSelect: false,
+					afterSelectionChange: function (row, event) {
+						if (row && row.entity) {
+							if (row.selected) {
+								$scope.connection = $scope.connections[row.rowIndex];
+								$scope.DetailData = $scope.connection;
+							}
+						}
+						//transpose
+						//$scope.Selections = (angular.copy($scope.mySelections));
+						// $scope.Selections = $scope.mySelections;
+					}
+					};
+					
+				$scope.$watch('connections', function (newVal, oldVal) {
+					//$scope.MasterData = [];
+					var data =newVal;
+					if( newVal.plain + "" != "undefined" ){
+						data =newVal.plain();
+					}					
+					$scope.MasterData = data;
+					//console.log('... обновление вида на этапе:', newVal[newVal.length - 1]);
+				}, true);
+					
+				$scope.childGridOptions = { 
+					data: 'connection.palin()',					
+					//selectedItems: $scope.mySelections,
+      				//multiSelect: false 
+					};
+				// $scope.accounts = Restangular.all('connection').getList().$object;							
+				Restangular.all('connection').getList().then(function(connections) {
+					
+					var gonto = connections[0];
+
+					//gonto.connection_password = '123123';
+
+					// This will do a PUT to http://www.example.com/people/gonto
+					// It uses the self linking property :D
+					//gonto.put()
+					
+					$scope.connections = connections;
+					$scope.MasterData = connections.plain();					
+				});
+				
+				
+			};
+			
+			// function mainSrvc($scope) {
+				
+			// };
+	</script>
+	<div ng-controller="MainCtrl">
+		<p class="gridStyle" ng-grid="gridOptions">
+			<p>
+				<!--<p class="gridStyle" ng-grid="childGridOptions"><p>-->
+					<ul>
+
+				<!--<ul ng-repeat="item as DetailData">-->
+					<li ng-repeat="(key, val) in connection.plain()">
+						{{key}}: {{val}}
+					</li>
+				</ul>
+				<button ng-click="chasi()">Change& save Information</button>
+				<!--<div class="selectedItems">{{mySelections}}</div>	-->
+	</div>
+</body>
+
+</html>
